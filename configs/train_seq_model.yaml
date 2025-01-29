@@ -18,7 +18,7 @@ vocab_file: /home/nvg7279/src/seq-struct/vocab.txt
 vocab_size: 30
 use_alignment_tokens: True
 
-log_dir: /scratch/nvg7279/logs/guided_protein_seq
+log_dir: /home/ubuntu/KrishnaLlama/NOS/logs/
 exp_name: ar_mlm_test
 exp_dir: ${log_dir}/${exp_name}
 
