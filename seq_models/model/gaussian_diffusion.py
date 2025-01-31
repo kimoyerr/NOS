@@ -159,8 +159,11 @@ class GaussianDiffusionTransformer(nn.Module):
         sequence_output=None,
         bad_word_ids=None,
     ):
+        # Predict x0 using the model (p(x0|xt, t))
         out = self.pred_xstart(x, t, attn_mask, sequence_output, bad_word_ids)
 
+        # Sample xt-1 from the posterior distribution (p(xt-1|x0, xt))
+        # Because we are adding Gaussian noise, we can sample from the posterior distribution using Bayes' rule: See here: https://lilianweng.github.io/posts/2021-07-11-diffusion-models/
         mean, _, logvar = noise_schedule.q_posterior_mean_variance(
             x_start=out['xstart'], x_t=x, t=t
         )
@@ -171,8 +174,11 @@ class GaussianDiffusionTransformer(nn.Module):
         )  # no noise when t == 0
 
         sigma = torch.exp(0.5 * logvar)
+        # Calculate the posterior sample at t+1
         x = mean + nonzero_mask * sigma * noise
 
+        # Add the ground truth values to the posterior sample if provided using the infill mask. This ensures that only the infill_mask positions are replaced with the new values at time t+1
+        #TODO: Why noise the original gt values? What would happen if we just used the original gt values?
         if gt_vals is not None:
             noise_t = torch.maximum(t[:1] - 1, torch.zeros_like(t[:1]))
             noisy_gt = noise_schedule.q_sample(gt_vals, noise_t)
